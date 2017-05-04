@@ -82,3 +82,80 @@ def follow_line(tp, ti, td, n, car_settings, initial_position):
     error_history.append(abs(error))
 
   return car_history, error_history
+
+
+##########################
+# parameter optimization
+#########################
+def twiddle(p = [0.495, 0.0013, 4.475], 
+            dp = [0.01, 0.001, 0.1],
+            big_factor = 1.1, 
+            small_factor = 0.9,
+            N = 1000,
+            func = follow_line, 
+            n = 300,
+            settings = {'tolerance': 0.001, 
+                        'length': 20.,
+                        'max_steering': pi / 4.,
+                        'steering_drift': 10. * pi / 180.,
+                        'steering_noise': 0.,
+                        'speed_noise': 0.0},
+            position = {'x': 0., 'y': 10., 'theta': 0.}
+            ):
+    
+  def run(x): 
+    tp, ti, td = x[0], x[1], x[2]
+    _, error_history = func(tp, ti, td, n, settings, position)
+    error = sum(error_history[-100:]) / 100 # average error of last 100 items
+    return error
+
+  best_error = run(p)
+
+  for c in range(N):
+    
+    print('tp:', p[0], 'ti:', p[1], 'td:', p[2], 'error:', best_error)
+        
+    for i in range(len(p)):
+        
+      p[i] += dp[i] # add a little to this control gain 
+      error = run(p) # compute the average error
+    
+      if abs(error) < abs(best_error):
+        # if the error is better, be more aggressive in tweaking
+        # this control gain the next time around
+        # proceed to the tuning the next control gain
+        best_error = error
+        dp[i] *= big_factor
+        
+      else:
+
+        # if the error is worse, roll back to your previous control gain 
+        p[i] -= 2 * dp[i]
+        error = run(p)
+            
+        # after rolling back, check if this error is better
+        # if it is, be more aggressive in tweaking
+        # this control gain next time around
+        # proceed to the tuning the next control gain
+        if abs(error) < abs(best_error):
+          best_error = error
+          dp[i] *= big_factor
+            
+        else:
+          # if the error is worst after rolling back
+          # be more conservative (less aggressive)
+          # in tweaking this control gain 
+          # the next time around
+          # proceed to the tuning the next control gain
+          p[i] += dp[i]
+          dp[i] *= small_factor      
+
+  print()
+  print("best parameters:", p)
+  print("(dp):", dp)
+  tp, ti, td = p[0], p[1], p[2]
+  _, error_history = func(tp, ti, td, n, settings, position)
+  print("last error:", error_history[-1])
+  print("average error of last 100 steps:", sum(error_history[-100:]) / 100)
+  print ("average error", sum(error_history) / len(error_history))
+    
