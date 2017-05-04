@@ -159,3 +159,22 @@ def twiddle(p = [0.495, 0.0013, 4.475],
   print("average error of last 100 steps:", sum(error_history[-100:]) / 100)
   print ("average error", sum(error_history) / len(error_history))
     
+
+##########################
+# cross track error to follow a specific race track geometry
+#########################
+def cte(car, r = 25.):
+
+  if car.x < r:
+    e = sqrt((car.x - r) ** 2 + (car.y - r) ** 2) - r
+  elif car.x > 3. * r:
+    e = sqrt((car.x - 3 *r) ** 2 + (car.y - r) ** 2) - r
+  elif car.y > r:
+    e = car.y - 2. * r
+  else:
+    e = - car.y # moving at opposite direction
+  
+  return e
+
+
+    
