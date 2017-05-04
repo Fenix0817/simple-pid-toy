@@ -54,3 +54,31 @@ class Car:
       self.y += (r * cos(self.theta) - r * cos(phi))
       self.theta = phi
         
+
+##########################
+# try to follow a line with given PID parameters at n timesteps 
+# with given car settings and car initial poistion
+#########################
+def follow_line(tp, ti, td, n, car_settings, initial_position):
+    
+  car_history, error_history = [], []
+  car = Car(position = initial_position, settings = car_settings)
+  
+  previous_error = car.y
+  total_error = 0.
+
+  for i in range(n):
+        
+    error = car.y
+    derror = error - previous_error    
+    angle = -tp * error + -ti * total_error + - td * derror
+
+    car.move(speed = 1., dt = 1., steering = angle)
+    
+    total_error += error
+    previous_error = error
+    
+    car_history.append(deepcopy(car))
+    error_history.append(abs(error))
+
+  return car_history, error_history
