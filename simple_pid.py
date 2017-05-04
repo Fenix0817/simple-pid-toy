@@ -177,4 +177,40 @@ def cte(car, r = 25.):
   return e
 
 
+##########################
+# follow a specific race track geometry
+#########################  
+def follow_race_track(tp = 10., ti = 0., td = 15., n = 300, 
+  car_settings = {'tolerance': 0.001, 
+                  'length': 20.,
+                  'max_steering': pi / 4.,
+                  'steering_drift': 10. * pi / 180.,
+                  'steering_noise': pi / 100.,
+                  'speed_noise': 0.01
+                  }, 
+  initial_position = {'x': 0., 'y': 25.,'theta': pi / 2.}):
+  
+  car_history, error_history = [], []
+
+  car = Car(position = initial_position, settings = car_settings)
+  
+  total_error = 0.
+  derror = 0.
+  previous_error = cte(car)
+
+  for i in range(n):
+    
+    error = cte(car)
+    derror = error - previous_error
+    angle = -tp * error + -ti * total_error + -td * derror
+    
+    car.move(speed = 1., dt = 1., steering = angle)
+        
+    total_error += error
+    previous_error = error
+
+    car_history.append(deepcopy(car))
+    error_history.append(error)
+
+  return car_history, error_history
     
