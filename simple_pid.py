@@ -172,7 +172,7 @@ def cte(car, r = 25.):
   elif car.y > r:
     e = car.y - 2. * r
   else:
-    e = - car.y # moving at opposite direction
+    e = -car.y # moving at opposite direction
   
   return e
 
